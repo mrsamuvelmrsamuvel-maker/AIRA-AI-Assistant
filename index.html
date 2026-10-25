@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#090714">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>AIRA AI Assistant</title>
+  <style>
+    :root {
+      --bg: #090714;
+      --panel: #141126;
+      --panel2: #1c1733;
+      --purple: #a78bfa;
+      --purple2: #7c3aed;
+      --text: #f5f3ff;
+      --muted: #aaa4c3;
+      --border: rgba(196,181,253,.17);
+      --user: #38266b;
+      --assistant: #17142a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      background:
+        radial-gradient(ellipse at top, #211344 0%, transparent 55%),
+        var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, textarea, input { font: inherit; }
+    button {
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .app {
+      max-width: 900px;
+      min-height: 100dvh;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: rgba(9,7,20,.92);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 15px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #c4b5fd, #7c3aed);
+      color: #100820;
+      font-weight: 900;
+      font-size: 21px;
+      box-shadow: 0 0 28px #7c3aed55;
+    }
+    .brand { flex: 1; min-width: 0; }
+    .brand h1 {
+      margin: 0;
+      font-size: 19px;
+      letter-spacing: 1.5px;
+    }
+    .brand p {
+      margin: 4px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .status {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      margin-right: 5px;
+      border-radius: 50%;
+      background: #a78bfa;
+    }
+    .small-btn {
+      color: var(--text);
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+    main {
+      flex: 1;
+      padding: 20px 14px 16px;
+    }
+    .welcome {
+      padding: 28px 18px;
+      margin: 10px 0 22px;
+      text-align: center;
+      background: linear-gradient(145deg, #20143d, #111020);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+    }
+    .orb {
+      width: 76px;
+      height: 76px;
+      margin: 0 auto 17px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      font-size: 30px;
+      font-weight: 800;
+      color: #120824;
+      background: radial-gradient(circle at 30% 25%, #fff, #c4b5fd 35%, #7c3aed 75%);
+      box-shadow: 0 0 40px #8b5cf655;
+    }
+    .welcome h2 {
+      margin: 0 0 10px;
+      font-size: clamp(23px, 5vw, 30px);
+    }
+    .welcome p {
+      max-width: 470px;
+      margin: auto;
+      line-height: 1.6;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0 24px;
+    }
+    .quick {
+      min-height: 70px;
+      padding: 12px;
+      text-align: left;
+      color: var(--text);
+      background: rgba(24,20,44,.9);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+    .quick strong {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    .quick span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    #messages {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .message {
+      max-width: 94%;
+      padding: 13px 15px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+    .message.user {
+      align-self: flex-end;
+      background: var(--user);
+      border-bottom-right-radius: 5px;
+    }
+    .message.assistant {
+      align-self: flex-start;
+      background: var(--assistant);
+      border-bottom-left-radius: 5px;
+    }
+    .message .label {
+      display: block;
+      margin-bottom: 6px;
+      color: #c4b5fd;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .6px;
+    }
+    .message pre {
+      padding: 12px;
+      overflow-x: auto;
+      border-radius: 10px;
+      background: #080711;
+      white-space: pre;
+    }
+    .message code { font-size: 13px; }
+    .message-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .message-actions button {
+      padding: 7px 10px;
+      color: var(--muted);
+      background: #25203c;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      font-size: 12px;
+    }
+    .typing {
+      color: var(--muted);
+      font-size: 13px;
+      padding: 10px;
+    }
+    .composer-wrap {
+      position: sticky;
+      bottom: 0;
+      z-index: 4;
+      padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+      background: rgba(9,7,20,.96);
+      border-top: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+    }
+    .tools {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      overflow-x: auto;
+    }
+    .tool-btn {
+      flex-shrink: 0;
+      padding: 8px 11px;
+      color: var(--muted);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 12px;
+    }
+    .tool-btn.active {
+      color: #fff;
+      border-color: var(--purple);
+      background: #38266b;
+    }
+    .composer {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid #57418c;
+      background: #151126;
+      border-radius: 19px;
+    }
+    #prompt {
+      flex: 1;
+      min-width: 0;
+      max-height: 140px;
+      resize: none;
+      outline: none;
+      border: 0;
+      padding: 10px 6px;
+      color: var(--text);
+      background: transparent;
+      line-height: 1.45;
+    }
+    #prompt::placeholder { color: #8e87a9; }
+    .icon-btn {
+      flex-shrink: 0;
+      width: 42px;
+      height: 42px;
+      border: 0;
+      border-radius: 13px;
+      color: var(--text);
+      background: #29223f;
+    }
+    #sendBtn {
+      color: #140a26;
+      font-size: 18px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #c4b5fd, #8b5cf6);
+    }
+    #sendBtn:disabled { opacity: .5; }
+    .footer-note {
+      padding-top: 9px;
+      text-align: center;
+      color: #79718f;
+      font-size: 11px;
+    }
+    .code-panel {
+      display: none;
+      margin-top: 16px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 16px;
+    }
+    .code-panel h3 { margin: 0 0 10px; }
+    #codeOutput {
+      min-height: 100px;
+      max-height: 280px;
+      overflow: auto;
+      padding: 12px;
+      color: #e9ddff;
+      background: #070611;
+      border-radius: 10px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font-size: 12px;
+    }
+    .panel-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    @media (min-width: 700px) {
+      main { padding: 28px 24px; }
+      .quick-actions { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .message { max-width: 82%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="logo">A</div>
+      <div class="brand">
+        <h1>AIRA AI</h1>
+        <p><span class="status"></span>Personal AI Assistant</p>
+      </div>
+      <button class="small-btn" id="newChatBtn" type="button">＋ New</button>
+    </header>
+    <main>
+      <section class="welcome" id="welcome">
+        <div class="orb">A</div>
+        <h2>Vanakkam! I'm AIRA.</h2>
+        <p>Your AI assistant for Tamil and English. Ask questions, learn, write code, or plan your work.</p>
+      </section>
+      <section class="quick-actions" id="quickActions">
+        <button class="quick" data-prompt="Introduce yourself in Tamil and English.">
+          <strong>✦ Ask AIRA</strong><span>Start a conversation</span>
+        </button>
+        <button class="quick" data-prompt="Help me write and debug website code. Explain each step simply.">
+          <strong>⌘ Coding Help</strong><span>Build websites and apps</span>
+        </button>
+        <button class="quick" data-prompt="Help me organise my tasks for today.">
+          <strong>▦ My Tasks</strong><span>Plan your day</span>
+        </button>
+        <button class="quick" data-prompt="Reply in simple spoken Tamil.">
+          <strong>◉ Tamil Mode</strong><span>Pesalaam in Tamil</span>
+        </button>
+      </section>
+      <section id="messages" aria-live="polite"></section>
+      <section class="code-panel" id="codePanel">
+        <h3>Code Workspace</h3>
+        <pre id="codeOutput">AIRA code output will appear here.</pre>
+        <div class="panel-actions">
+          <button class="small-btn" id="copyCodeBtn" type="button">Copy code</button>
+          <button class="small-btn" id="downloadCodeBtn" type="button">Download .txt</button>
+        </div>
+      </section>
+    </main>
+    <section class="composer-wrap">
+      <div class="tools">
+        <button class="tool-btn active" data-mode="assistant" type="button">✦ Assistant</button>
+        <button class="tool-btn" data-mode="coding" type="button">⌘ Coding</button>
+        <button class="tool-btn" id="voiceToggle" type="button">🔊 Voice: On</button>
+        <button class="tool-btn" id="clearBtn" type="button">Clear chat</button>
+      </div>
+      <form class="composer" id="chatForm">
+        <button class="icon-btn" id="micBtn" type="button" aria-label="Voice input">🎙</button>
+        <textarea id="prompt" rows="1" placeholder="Message AIRA in Tamil or English..." required></textarea>
+        <button class="icon-btn" id="sendBtn" type="submit" aria-label="Send message">➤</button>
+      </form>
+      <div class="footer-note">AIRA AI · Your assistant, your workspace</div>
+    </section>
+  </div>
+  <script>
+    // This must point to your deployed Cloudflare Worker.
+    const API_URL = "https://aira-ai-assistant.mrsamuvelmrsamuvel.workers.dev/";
+    const messagesEl = document.getElementById("messages");
+    const promptEl = document.getElementById("prompt");
+    const sendBtn = document.getElementById("sendBtn");
+    const welcomeEl = document.getElementById("welcome");
+    const quickActionsEl = document.getElementById("quickActions");
+    const codePanel = document.getElementById("codePanel");
+    const codeOutput = document.getElementById("codeOutput");
+    let history = [];
+    let mode = "assistant";
+    let voiceEnabled = true;
+    let recognition = null;
+    function addMessage(role, text) {
+      const box = document.createElement("article");
+      box.className = "message " + role;
+      const label = document.createElement("span");
+      label.className = "label";
+      label.textContent = role === "user" ? "YOU" : "AIRA";
+      box.appendChild(label);
+      const content = document.createElement("div");
+      content.textContent = text;
+      box.appendChild(content);
+      if (role === "assistant") {
+        const actions = document.createElement("div");
+        actions.className = "message-actions";
+        const copy = document.createElement("button");
+        copy.type = "button";
+        copy.textContent = "Copy";
+        copy.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(text);
+            copy.textContent = "Copied!";
+          } catch {
+            copy.textContent = "Copy unavailable";
+          }
+        });
+        const speak = document.createElement("button");
+        speak.type = "button";
+        speak.textContent = "🔊 Read aloud";
+        speak.addEventListener("click", () => speakText(text));
+        actions.append(copy, speak);
+        box.appendChild(actions);
+        if (mode === "coding" || /```|function |const |<html|<script/i.test(text)) {
+          codeOutput.textContent = text;
+          codePanel.style.display = "block";
+        }
+      }
+      messagesEl.appendChild(box);
+      box.scrollIntoView({ behavior: "smooth", block: "end" });
+      return box;
+    }
+    function speakText(text) {
+      if (!("speechSynthesis" in window)) {
+        alert("Voice output is not supported in this browser.");
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = /[\u0B80-\u0BFF]/.test(text) ? "ta-IN" : "en-IN";
+      utterance.rate = 1;
+      window.speechSynthesis.speak(utterance);
+    }
+    function setMode(newMode) {
+      mode = newMode;
+      document.querySelectorAll("[data-mode]").forEach(button => {
+        button.classList.toggle("active", button.dataset.mode === mode);
+      });
+      promptEl.placeholder = mode === "coding"
+        ? "Describe the code you want AIRA to create..."
+        : "Message AIRA in Tamil or English...";
+    }
+    async function sendMessage(text) {
+      text = text.trim();
+      if (!text || sendBtn.disabled) return;
+      welcomeEl.style.display = "none";
+      quickActionsEl.style.display = "none";
+      addMessage("user", text);
+      promptEl.value = "";
+      promptEl.style.height = "auto";
+      sendBtn.disabled = true;
+      const typing = document.createElement("div");
+      typing.className = "typing";
+      typing.textContent = "AIRA is thinking...";
+      messagesEl.appendChild(typing);
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: text,
+            history: history.slice(-12),
+            mode: mode,
+            creator: "Samuvel"
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || "Request failed with status " + response.status);
+        }
+        const reply = data.reply || data.message || data.choices?.[0]?.message?.content;
+        if (!reply) {
+          throw new Error("The server did not return a reply. Check the Worker backend.");
+        }
+        typing.remove();
+        addMessage("assistant", reply);
+        history.push(
+          { role: "user", content: text },
+          { role: "assistant", content: reply }
+        );
+        if (voiceEnabled) speakText(reply);
+      } catch (error) {
+        typing.remove();
+        addMessage(
+          "assistant",
+          "Sorry! AIRA could not reply.\n\nError: " + error.message +
+          "\n\nCheck that the Cloudflare Worker code is deployed and its API secret is configured."
+        );
+      } finally {
+        sendBtn.disabled = false;
+        promptEl.focus();
+      }
+    }
+    document.getElementById("chatForm").addEventListener("submit", event => {
+      event.preventDefault();
+      sendMessage(promptEl.value);
+    });
+    promptEl.addEventListener("input", () => {
+      promptEl.style.height = "auto";
+      promptEl.style.height = Math.min(promptEl.scrollHeight, 140) + "px";
+    });
+    promptEl.addEventListener("keydown", event => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        document.getElementById("chatForm").requestSubmit();
+      }
+    });
+    document.querySelectorAll("[data-mode]").forEach(button => {
+      button.addEventListener("click", () => setMode(button.dataset.mode));
+    });
+    document.querySelectorAll("[data-prompt]").forEach(button => {
+      button.addEventListener("click", () => {
+        promptEl.value = button.dataset.prompt;
+        sendMessage(promptEl.value);
+      });
+    });
+    document.getElementById("newChatBtn").addEventListener("click", resetChat);
+    document.getElementById("clearBtn").addEventListener("click", resetChat);
+    function resetChat() {
+      history = [];
+      messagesEl.replaceChildren();
+      codePanel.style.display = "none";
+      welcomeEl.style.display = "";
+      quickActionsEl.style.display = "";
+      window.speechSynthesis?.cancel();
+      promptEl.value = "";
+      promptEl.focus();
+    }
+    document.getElementById("voiceToggle").addEventListener("click", event => {
+      voiceEnabled = !voiceEnabled;
+      event.currentTarget.textContent = voiceEnabled ? "🔊 Voice: On" : "🔇 Voice: Off";
+    });
+    document.getElementById("micBtn").addEventListener("click", () => {
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("Voice input is not available in this browser. You can type your message instead.");
+        return;
+      }
+      if (recognition) {
+        recognition.stop();
+        recognition = null;
+        return;
+      }
+      recognition = new SpeechRecognition();
+      recognition.lang = "ta-IN";
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.onresult = event => {
+        promptEl.value = event.results[0][0].transcript;
+        promptEl.dispatchEvent(new Event("input"));
+      };
+      recognition.onerror = event => {
+        alert("Microphone error: " + event.error);
+      };
+      recognition.onend = () => { recognition = null; };
+      recognition.start();
+    });
+    document.getElementById("copyCodeBtn").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(codeOutput.textContent);
+        alert("Code copied!");
+      } catch {
+        alert("Copy failed. Select and copy the code manually.");
+      }
+    });
+    document.getElementById("downloadCodeBtn").addEventListener("click", () => {
+      const blob = new Blob([codeOutput.textContent], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "aira-code.txt";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
